@@ -9,7 +9,7 @@ providing comprehensive and structured XML representation.
 Author: EDIFACT Parser Team
 Version: 1.0.0
 """
-
+import re # Ensure re is imported
 from typing import Dict, List, Optional, Any, Union
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
@@ -88,6 +88,32 @@ class XMLGenerator:
         # Register namespaces
         for prefix, uri in self.namespaces.items():
             ET.register_namespace(prefix, uri)
+
+    def _sanitize_xml_tag_name(self, name: str, default_prefix: str = "Element") -> str:
+        if not name:
+            return f"{default_prefix}Unnamed"
+
+        # Remove leading/trailing whitespace
+        name = name.strip()
+
+        # Replace common separators and problematic characters with underscore
+        # This list can beexpanded.
+        name = re.sub(r"[\s,:;()\/?#*']+", "_", name) # More comprehensive, excluding " . - which are handled or valid
+
+        # Remove any characters not allowed in XML names (simplified: letters, digits, underscore, period, hyphen)
+        # XML spec is more complex, but this covers many cases.
+        # Keep letters, digits, underscore, period, hyphen.
+        name = re.sub(r"[^a-zA-Z0-9_.-]", "", name) # Added hyphen to allowed characters
+
+        # XML names must start with a letter or underscore.
+        if not re.match(r"^[a-zA-Z_]", name):
+            name = default_prefix + "_" + name # Prepend prefix and underscore if it doesn't start correctly
+
+        # If the name became empty or just underscores after sanitization, provide a default
+        if not name or name.strip("_") == "":
+            return f"{default_prefix}SanitizedEmpty"
+
+        return name
     
     def generate_xml(self, parsed_message: ParsedMessage, 
                     root_element_name: Optional[str] = None) -> ET.Element:
@@ -248,10 +274,12 @@ class XMLGenerator:
         """Add segment to XML parent element"""
         
         # Determine element name
+        raw_name = ""
         if self.config.use_semantic_names and segment.semantic_name:
-            element_name = segment.semantic_name
+            raw_name = segment.semantic_name
         else:
-            element_name = segment.tag
+            raw_name = segment.tag
+        element_name = self._sanitize_xml_tag_name(raw_name, default_prefix=segment.tag or "Segment")
         
         # Create segment element
         segment_elem = ET.SubElement(parent, element_name)
@@ -282,10 +310,15 @@ class XMLGenerator:
         """Add element to XML parent"""
         
         # Determine element name
+        raw_name = ""
         if self.config.use_semantic_names and element.name:
-            element_name = element.name.replace(" ", "").replace("/", "")
-        else:
-            element_name = f"Element{element.position:02d}"
+            raw_name = element.name
+        # else, raw_name remains empty, sanitize_xml_tag_name will use default_prefix
+
+        default_el_prefix = f"Element{element.position:02d}"
+        element_name = self._sanitize_xml_tag_name(raw_name, default_prefix=default_el_prefix)
+        if not raw_name and not (self.config.use_semantic_names and element.name): # if raw_name was truly empty from start
+            element_name = default_el_prefix # Fallback to Element01 if semantic name was empty/not used
         
         # Create element
         element_elem = ET.SubElement(parent, element_name)
@@ -321,10 +354,15 @@ class XMLGenerator:
         """Add component to XML parent"""
         
         # Determine component name
+        raw_name = ""
         if self.config.use_semantic_names and component.name:
-            component_name = component.name.replace(" ", "").replace("/", "")
-        else:
-            component_name = f"Component{component.position:02d}"
+            raw_name = component.name
+        # else, raw_name remains empty
+
+        default_comp_prefix = f"Component{component.position:02d}"
+        component_name = self._sanitize_xml_tag_name(raw_name, default_prefix=default_comp_prefix)
+        if not raw_name and not (self.config.use_semantic_names and component.name): # if raw_name was truly empty
+            component_name = default_comp_prefix # Fallback to Component01
         
         # Create component element
         component_elem = ET.SubElement(parent, component_name)
@@ -412,12 +450,29 @@ class XMLGenerator:
         if self.config.pretty_print:
             # Use minidom for pretty printing
             rough_string = ET.tostring(xml_root, encoding='unicode')
-            reparsed = minidom.parseString(rough_string)
-            pretty_xml = reparsed.toprettyxml(indent=" " * self.config.indent_size)
-            
-            # Remove extra blank lines
-            lines = [line for line in pretty_xml.split('\n') if line.strip()]
-            return '\n'.join(lines)
+            try:
+                reparsed = minidom.parseString(rough_string)
+                pretty_xml = reparsed.toprettyxml(indent=" " * self.config.indent_size)
+
+                # Remove extra blank lines
+                lines = [line for line in pretty_xml.split('\n') if line.strip()]
+                return '\n'.join(lines)
+            except Exception as e:
+                print(f"DEBUG: Error during minidom.parseString or subsequent pretty_print processing: {e}")
+                print(f"DEBUG: Dumping rough_string (len={len(rough_string)}):")
+                # Print in chunks if it's extremely long to avoid truncation in logs,
+                # though for this error at col 3017, it should be manageable.
+                # Ensure the full string relevant to the error is printed.
+                # For an error at column 3017, we need to see at least that much.
+                # Let's print a sizeable portion around the suspected error point if possible,
+                # or just the beginning portion that includes it.
+                # Max length to print to avoid flooding logs, but enough to catch col 3017
+                print_limit = 4000
+                print(rough_string[:print_limit])
+                if len(rough_string) > print_limit:
+                    print("...")
+                    print(f"(Rough string was truncated in this debug output. Total length: {len(rough_string)})")
+                raise # Re-raise the original exception
         else:
             return ET.tostring(xml_root, encoding='unicode')
     

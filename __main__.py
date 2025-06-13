@@ -400,3 +400,13 @@ __version__ = "1.0.0"
 __author__ = "EDIFACT Parser Team"
 __description__ = "Professional EDIFACT to XML parser with comprehensive validation and semantic mapping"
 
+if __name__ == "__main__":
+    # Ensure cli.py can find its modules if __main__ is the entry point of the package
+    import sys
+    from pathlib import Path
+    # Add the package directory itself to sys.path to help resolve imports if needed,
+    # though -m should handle this. cli.py also does this.
+    # sys.path.insert(0, str(Path(__file__).parent))
+
+    from .cli import main as cli_main # Use relative import for cli
+    sys.exit(cli_main())

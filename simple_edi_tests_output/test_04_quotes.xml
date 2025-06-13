@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+<PurchaseOrderMessage xmlns:edifact="http://www.edifact.org/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" messageType="ORDERS" messageVersion="D" messageRelease="96A" messageReference="4" interchangeReference="4" syntaxIdentifier="UNOA" generatedAt="2025-06-13T21:01:27.335155">
+  <Envelope>
+    <TIEXMLVersionNumber>2.3.2</TIEXMLVersionNumber>
+    <InterchangeInfo>
+      <Sender>SENDER</Sender>
+      <Recipient>RECEIVER</Recipient>
+      <PreparationDate>240701</PreparationDate>
+      <PreparationTime>1203</PreparationTime>
+    </InterchangeInfo>
+  </Envelope>
+  <ServiceSegments>
+    <InterchangeHeader segmentTag="UNB" position="1" qualifier="UNOA" group="service">
+      <Syntax_Identifier position="1" elementId="S001" type="composite">
+        <Syntax_Identifier position="1" elementId="0001">UNOA</Syntax_Identifier>
+        <Syntax_Version_Number position="2" elementId="0002">1</Syntax_Version_Number>
+      </Syntax_Identifier>
+      <Interchange_Sender position="2" elementId="S002" type="composite">
+        <Sender_Identification position="1" elementId="0004">SENDER</Sender_Identification>
+      </Interchange_Sender>
+      <Interchange_Recipient position="3" elementId="S003" type="composite">
+        <Recipient_Identification position="1" elementId="0010">RECEIVER</Recipient_Identification>
+      </Interchange_Recipient>
+      <Date_Time_of_Preparation position="4" elementId="S004" type="composite">
+        <Date_of_Preparation position="1" elementId="0017">240701</Date_of_Preparation>
+        <Time_of_Preparation position="2" elementId="0019">1203</Time_of_Preparation>
+      </Date_Time_of_Preparation>
+      <Interchange_Control_Reference position="5" elementId="0020" type="simple">4</Interchange_Control_Reference>
+    </InterchangeHeader>
+    <MessageHeader segmentTag="UNH" position="2" qualifier="4" group="service">
+      <Message_Reference_Number position="1" elementId="0062" type="simple">4</Message_Reference_Number>
+      <Message_Identifier position="2" elementId="S009" type="composite">
+        <Message_Type position="1" elementId="0065">ORDERS</Message_Type>
+        <Message_Version_Number position="2" elementId="0052">D</Message_Version_Number>
+        <Message_Release_Number position="3" elementId="0054">96A</Message_Release_Number>
+        <Controlling_Agency position="4" elementId="0051">UN</Controlling_Agency>
+        <Association_Assigned_Code position="5" elementId="0057">EAN008</Association_Assigned_Code>
+      </Message_Identifier>
+    </MessageHeader>
+    <MessageTrailer segmentTag="UNT" position="6" qualifier="4" group="service">
+      <Number_of_Segments_in_the_Message position="1" elementId="0074" type="simple">4</Number_of_Segments_in_the_Message>
+      <Message_Reference_Number position="2" elementId="0062" type="simple">4</Message_Reference_Number>
+    </MessageTrailer>
+    <InterchangeTrailer segmentTag="UNZ" position="7" qualifier="1" group="service">
+      <Interchange_Control_Count position="1" elementId="0036" type="simple">1</Interchange_Control_Count>
+      <Interchange_Control_Reference position="2" elementId="0020" type="simple">4</Interchange_Control_Reference>
+    </InterchangeTrailer>
+  </ServiceSegments>
+  <HeaderSegments>
+    <BeginningOfMessage segmentTag="BGM" position="3" qualifier="220" group="header">
+      <Document_Message_Name position="1" elementId="C002" type="composite">
+        <Document_Message_Name_Coded position="1" elementId="1001">220</Document_Message_Name_Coded>
+      </Document_Message_Name>
+      <Document_Message_Identification position="2" elementId="1004" type="simple">ORDER004</Document_Message_Identification>
+      <Message_Function_Coded position="3" elementId="1225" type="simple">9</Message_Function_Coded>
+    </BeginningOfMessage>
+    <BuyerParty segmentTag="NAD" position="4" qualifier="BY" group="header">
+      <Party_Qualifier position="1" elementId="3035" type="simple">BY</Party_Qualifier>
+      <Party_Identification_Details position="2" elementId="C082" type="composite">
+        <Party_Id._Identification position="1" elementId="3039">BUYERID</Party_Id._Identification>
+      </Party_Identification_Details>
+      <Name_and_Address position="3" elementId="C058" type="composite">
+        <Name_and_Address_Line position="1" elementId="3124">Item &quot;Super&quot; Part</Name_and_Address_Line>
+      </Name_and_Address>
+    </BuyerParty>
+    <Deluxe segmentTag="Deluxe" position="5"/>
+  </HeaderSegments>
+  <ParsingStatistics>
+    <TotalSegments>7</TotalSegments>
+    <TotalElements>17</TotalElements>
+    <TotalComponents>14</TotalComponents>
+    <ProcessingTime>0.001205</ProcessingTime>
+    <FileSize>153</FileSize>
+    <ValidationErrors>1</ValidationErrors>
+    <ValidationWarnings>1</ValidationWarnings>
+    <SegmentsByType>
+      <Item key="UNB">1</Item>
+      <Item key="UNH">1</Item>
+      <Item key="BGM">1</Item>
+      <Item key="NAD">1</Item>
+      <Item key="Deluxe">1</Item>
+      <Item key="UNT">1</Item>
+      <Item key="UNZ">1</Item>
+    </SegmentsByType>
+    <ElementsByType/>
+    <ParsingErrors>0</ParsingErrors>
+  </ParsingStatistics>
+  <ValidationInfo>
+    <Summary isValid="false" errorCount="1" warningCount="1" infoCount="0"/>
+    <Messages>
+      <Message severity="warning" code="W005" segmentTag="NAD" segmentPosition="4" elementPosition="3" componentPosition="1">Non-alphanumeric characters in value: Item &quot;Super&quot; Part</Message>
+      <Message severity="error" code="E001" segmentTag="Deluxe" segmentPosition="5">Invalid segment tag format: Deluxe</Message>
+    </Messages>
+  </ValidationInfo>
+</PurchaseOrderMessage>

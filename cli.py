@@ -16,16 +16,12 @@ import os
 from pathlib import Path
 import logging
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+# sys.path.insert(0, str(Path(__file__).parent)) # Should be commented out for PYTHONPATH="/" approach
 
-from edifact_parser import (
-    EDIFACTToXMLConverter,
-    ValidationLevel,
-    get_supported_output_formats,
-    setup_parser_logging,
-    __version__
-)
+# Corrected relative imports based on identified locations of definitions
+from .__main__ import EDIFACTToXMLConverter, get_supported_output_formats, __version__
+from .edifact_validators import ValidationLevel
+from .edifact_utils import setup_logging as setup_parser_logging
 
 
 def setup_argument_parser():
@@ -355,4 +351,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-

@@ -1,0 +1,423 @@
+{
+  "document_types": {
+    "ORDERS": {
+      "document_type": "ORDERS",
+      "document_code": "850",
+      "description": "Purchase Order",
+      "required_segments": ["UNB", "UNH", "BGM", "DTM", "NAD", "LIN", "UNT", "UNZ"],
+      "optional_segments": ["RFF", "CUX", "PAT", "TDT", "LOC", "QTY", "PRI", "MOA"],
+      "business_rules": {
+        "min_line_items": 1,
+        "max_line_items": 9999,
+        "currency_required": true
+      },
+      "default_mappings": {
+        "order_number": "business_data.references.ON",
+        "order_date": "business_data.dates.137",
+        "buyer": "business_data.parties.BY",
+        "supplier": "business_data.parties.SU"
+      },
+      "validation_rules": [],
+      "metadata": {
+        "created_date": "2024-03-15",
+        "version": "1.0"
+      }
+    },
+    "INVOIC": {
+      "document_type": "INVOIC",
+      "document_code": "810",
+      "description": "Invoice",
+      "required_segments": ["UNB", "UNH", "BGM", "DTM", "NAD", "LIN", "MOA", "UNT", "UNZ"],
+      "optional_segments": ["RFF", "CUX", "PAT", "TDT", "LOC", "QTY", "PRI", "TAX"],
+      "business_rules": {
+        "min_line_items": 1,
+        "total_amount_required": true,
+        "tax_calculation_required": true
+      },
+      "default_mappings": {
+        "invoice_number": "business_data.references.IV",
+        "invoice_date": "business_data.dates.137",
+        "supplier": "business_data.parties.SU",
+        "customer": "business_data.parties.BY"
+      },
+      "validation_rules": [],
+      "metadata": {
+        "created_date": "2024-03-15",
+        "version": "1.0"
+      }
+    }
+  },
+  "customers": {
+    "1234567890123": {
+      "customer_gln": "1234567890123",
+      "customer_name": "Global Retail Chain",
+      "contact_info": {
+        "email": "edi@globalretail.com",
+        "phone": "+1-555-0123",
+        "contact_person": "John Smith"
+      },
+      "document_preferences": {
+        "ORDERS": {
+          "require_delivery_date": true,
+          "max_line_items": 100,
+          "currency": "USD",
+          "include_item_descriptions": true,
+          "require_supplier_item_code": false
+        },
+        "INVOIC": {
+          "require_tax_breakdown": true,
+          "payment_terms_required": true,
+          "include_order_reference": true,
+          "currency": "USD"
+        }
+      },
+      "field_mappings": {
+        "ORDERS": {
+          "custom_order_field": "business_data.references.CR",
+          "delivery_instructions": "business_data.free_text.DEL"
+        }
+      },
+      "transformation_rules": {
+        "date_format": "YYYY-MM-DD",
+        "amount_format": "decimal_2",
+        "include_empty_fields": true
+      },
+      "output_formats": ["xml", "json"],
+      "special_requirements": [
+        "Include all empty fields for completeness",
+        "Use customer-specific item codes when available",
+        "Include delivery date in all orders"
+      ],
+      "metadata": {
+        "onboarding_date": "2024-01-15",
+        "last_updated": "2024-03-15",
+        "status": "active"
+      }
+    },
+    "9876543210987": {
+      "customer_gln": "9876543210987",
+      "customer_name": "Manufacturing Corp",
+      "contact_info": {
+        "email": "procurement@manufacturing.com",
+        "phone": "+1-555-0456",
+        "contact_person": "Sarah Johnson"
+      },
+      "document_preferences": {
+        "ORDERS": {
+          "require_delivery_date": false,
+          "max_line_items": 500,
+          "currency": "EUR",
+          "include_item_descriptions": false,
+          "require_supplier_item_code": true
+        },
+        "INVOIC": {
+          "require_tax_breakdown": false,
+          "payment_terms_required": false,
+          "include_order_reference": true,
+          "currency": "EUR"
+        }
+      },
+      "field_mappings": {
+        "ORDERS": {
+          "project_code": "business_data.references.PJ",
+          "cost_center": "business_data.references.CC"
+        }
+      },
+      "transformation_rules": {
+        "date_format": "DD/MM/YYYY",
+        "amount_format": "decimal_3",
+        "include_empty_fields": false
+      },
+      "output_formats": ["xml"],
+      "special_requirements": [
+        "Exclude empty fields to minimize file size",
+        "Use supplier item codes only",
+        "Group line items by product category"
+      ],
+      "metadata": {
+        "onboarding_date": "2024-02-01",
+        "last_updated": "2024-03-10",
+        "status": "active"
+      }
+    }
+  },
+  "mappings": {
+    "ORDERS:1234567890123": {
+      "config_name": "orders_global_retail",
+      "document_type": "ORDERS",
+      "customer_gln": "1234567890123",
+      "target_format": "xml",
+      "field_mappings": [
+        {
+          "source_path": "business_data.references.ON",
+          "target_path": "Header.OrderNumber",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Order number mapping"
+        },
+        {
+          "source_path": "business_data.dates.137",
+          "target_path": "Header.OrderDate",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "date",
+            "input_format": "%Y%m%d",
+            "output_format": "%Y-%m-%d"
+          },
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Order date formatting"
+        },
+        {
+          "source_path": "business_data.dates.2",
+          "target_path": "Header.DeliveryDate",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "date",
+            "input_format": "%Y%m%d",
+            "output_format": "%Y-%m-%d"
+          },
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Delivery date formatting"
+        },
+        {
+          "source_path": "business_data.parties.BY.id",
+          "target_path": "Parties.Buyer.ID",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Buyer ID"
+        },
+        {
+          "source_path": "business_data.parties.BY.name",
+          "target_path": "Parties.Buyer.Name",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Buyer name"
+        },
+        {
+          "source_path": "business_data.parties.BY.address",
+          "target_path": "Parties.Buyer.Address.Street",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Buyer address"
+        },
+        {
+          "source_path": "business_data.parties.SU.id",
+          "target_path": "Parties.Supplier.ID",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Supplier ID"
+        },
+        {
+          "source_path": "business_data.parties.SU.name",
+          "target_path": "Parties.Supplier.Name",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Supplier name"
+        },
+        {
+          "source_path": "business_data.line_items",
+          "target_path": "LineItems.LineItem",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Line items array"
+        },
+        {
+          "source_path": "business_data.totals.79",
+          "target_path": "Summary.TotalAmount",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "number",
+            "decimal_places": 2
+          },
+          "required": false,
+          "default_value": "0.00",
+          "validation_rules": [],
+          "description": "Total amount formatting"
+        }
+      ],
+      "transformation_rules": {
+        "global_currency": "USD",
+        "include_empty_elements": true,
+        "date_format": "ISO"
+      },
+      "output_template": "PurchaseOrder",
+      "validation_enabled": true,
+      "metadata": {
+        "created_date": "2024-03-15",
+        "last_modified": "2024-03-15",
+        "version": "1.0"
+      }
+    },
+    "INVOIC:1234567890123": {
+      "config_name": "invoice_global_retail",
+      "document_type": "INVOIC",
+      "customer_gln": "1234567890123",
+      "target_format": "xml",
+      "field_mappings": [
+        {
+          "source_path": "business_data.references.IV",
+          "target_path": "Header.InvoiceNumber",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Invoice number"
+        },
+        {
+          "source_path": "business_data.dates.137",
+          "target_path": "Header.InvoiceDate",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "date",
+            "input_format": "%Y%m%d",
+            "output_format": "%Y-%m-%d"
+          },
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Invoice date"
+        },
+        {
+          "source_path": "business_data.dates.35",
+          "target_path": "Header.DueDate",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "date",
+            "input_format": "%Y%m%d",
+            "output_format": "%Y-%m-%d"
+          },
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Payment due date"
+        },
+        {
+          "source_path": "business_data.references.ON",
+          "target_path": "Header.OrderReference",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": false,
+          "default_value": "",
+          "validation_rules": [],
+          "description": "Order reference"
+        },
+        {
+          "source_path": "business_data.parties.SU",
+          "target_path": "Parties.Supplier",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Supplier information"
+        },
+        {
+          "source_path": "business_data.parties.BY",
+          "target_path": "Parties.Customer",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Customer information"
+        },
+        {
+          "source_path": "business_data.line_items",
+          "target_path": "LineItems.LineItem",
+          "transformation_type": "copy",
+          "transformation_config": {},
+          "required": true,
+          "default_value": null,
+          "validation_rules": [],
+          "description": "Invoice line items"
+        },
+        {
+          "source_path": "business_data.totals.125",
+          "target_path": "Summary.SubTotal",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "number",
+            "decimal_places": 2
+          },
+          "required": false,
+          "default_value": "0.00",
+          "validation_rules": [],
+          "description": "Subtotal amount"
+        },
+        {
+          "source_path": "business_data.totals.124",
+          "target_path": "Summary.TotalTax",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "number",
+            "decimal_places": 2
+          },
+          "required": false,
+          "default_value": "0.00",
+          "validation_rules": [],
+          "description": "Total tax amount"
+        },
+        {
+          "source_path": "business_data.totals.128",
+          "target_path": "Summary.TotalAmount",
+          "transformation_type": "format",
+          "transformation_config": {
+            "format_type": "number",
+            "decimal_places": 2
+          },
+          "required": true,
+          "default_value": "0.00",
+          "validation_rules": [],
+          "description": "Total payable amount"
+        }
+      ],
+      "transformation_rules": {
+        "global_currency": "USD",
+        "include_empty_elements": true,
+        "tax_calculation": "automatic"
+      },
+      "output_template": "Invoice",
+      "validation_enabled": true,
+      "metadata": {
+        "created_date": "2024-03-15",
+        "last_modified": "2024-03-15",
+        "version": "1.0"
+      }
+    }
+  },
+  "metadata": {
+    "export_timestamp": "2024-03-15T10:30:00Z",
+    "version": "1.0.0",
+    "description": "Sample configurations for EDI customization layer",
+    "total_document_types": 2,
+    "total_customers": 2,
+    "total_mappings": 2
+  }
+}
+

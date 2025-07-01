@@ -19,21 +19,23 @@ import re # Ensure re is imported if used directly by test utility, though _sani
 # Simplified import for subtask environment, assuming 'app' package context
 # The subtask environment might need to adjust this if it runs tests differently.
 # The core logic is to get XMLGenerator.
-try:
+# try:
     # This path assumes the 'app' directory (project root) is in PYTHONPATH
     # as per the successful execution strategy (PYTHONPATH="/", then 'app.module')
     # When running 'python -m unittest tests.test_xml_generator' from project root,
     # if project root is 'app', this should work.
-    from app.xml_generator import XMLGenerator
-except ImportError:
+    # from app.xml_generator import XMLGenerator # This was incorrect for current structure
+# except ImportError:
     # Fallback for environments where 'app' is not directly in path,
     # but the script is in 'tests/' and 'xml_generator.py' is in parent.
     # This is less ideal for package structures but can work for simple execution.
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    try:
-        from xml_generator import XMLGenerator # Assumes xml_generator.py is in root
-    except ImportError as e:
-        raise ImportError(f"Could not import XMLGenerator. Ensure PYTHONPATH is set correctly or test structure matches. Original error: {e}")
+    # sys.path.insert(0, str(Path(__file__).resolve().parent.parent)) # No longer needed
+    # try:
+        # from xml_generator import XMLGenerator # Assumes xml_generator.py is in root
+    # except ImportError as e:
+        # raise ImportError(f"Could not import XMLGenerator. Ensure PYTHONPATH is set correctly or test structure matches. Original error: {e}")
+
+from src.xml_generator import XMLGenerator
 
 
 class TestXMLGeneratorSanitizeTagName(unittest.TestCase):

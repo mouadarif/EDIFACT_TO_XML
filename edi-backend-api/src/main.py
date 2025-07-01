@@ -39,6 +39,27 @@ def document_types():
         ]
     })
 
+# Placeholder routes for frontend API calls not yet implemented
+@app.route('/api/system/info', methods=['GET'])
+def system_info_stub():
+    return jsonify({'message': 'Endpoint /api/system/info not yet implemented'}), 501
+
+@app.route('/api/statistics', methods=['GET'])
+def statistics_stub():
+    return jsonify({'message': 'Endpoint /api/statistics not yet implemented'}), 501
+
+@app.route('/api/edi/customers', methods=['GET', 'POST'])
+def customers_stub():
+    return jsonify({'message': 'Endpoint /api/edi/customers not yet implemented'}), 501
+
+@app.route('/api/processing/upload', methods=['POST'])
+def upload_stub():
+    return jsonify({'message': 'Endpoint /api/processing/upload not yet implemented'}), 501
+
+@app.route('/api/processing/jobs', methods=['GET'])
+def jobs_stub():
+    return jsonify({'message': 'Endpoint /api/processing/jobs not yet implemented'}), 501
+
 if __name__ == '__main__':
     print('🚀 Starting EDI Customization Layer Backend...')
     print('🌐 Server available at: http://localhost:5000')

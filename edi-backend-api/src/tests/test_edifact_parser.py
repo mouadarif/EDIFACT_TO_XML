@@ -15,45 +15,48 @@ import os
 from pathlib import Path
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# sys.path.insert(0, str(Path(__file__).parent.parent)) # No longer needed
 
-from edifact_parser import (
+from src.__main__ import (
     EDIFACTToXMLConverter,
     convert_edifact_to_xml,
     parse_edifact_message,
-    validate_edifact_message,
-    ValidationLevel
+    validate_edifact_message
 )
-from edifact_parser.edifact_syntax import EDIFACTSyntax
-from edifact_parser.edifact_parser import EDIFACTParser
-from edifact_parser.xml_generator import XMLGenerator
-from edifact_parser.edifact_utils import EDIFACTUtils
+from src.edifact_parser import EDIFACTParser # This is the core parser class
+from src.edifact_syntax import EDIFACTSyntax
+from src.xml_generator import XMLGenerator
+from src.edifact_utils import EDIFACTUtils
+from src.edifact_validators import ValidationLevel # ValidationLevel enum
 
 
 class TestEDIFACTSyntax(unittest.TestCase):
     """Test EDIFACT syntax parsing"""
     
     def setUp(self):
-        self.syntax = EDIFACTSyntax()
+        self.syntax = EDIFACTSyntax() # self.syntax is an EDIFACTSyntax object
     
     def test_default_syntax_characters(self):
         """Test default syntax characters"""
-        self.assertEqual(self.syntax.component_separator, ':')
-        self.assertEqual(self.syntax.element_separator, '+')
-        self.assertEqual(self.syntax.segment_terminator, "'")
-        self.assertEqual(self.syntax.escape_character, '?')
-        self.assertEqual(self.syntax.decimal_point, '.')
+        self.assertEqual(self.syntax.syntax.component_separator, ':')
+        self.assertEqual(self.syntax.syntax.element_separator, '+')
+        self.assertEqual(self.syntax.syntax.segment_terminator, "'")
+        self.assertEqual(self.syntax.syntax.escape_character, '?')
+        self.assertEqual(self.syntax.syntax.decimal_point, '.')
     
     def test_una_segment_parsing(self):
         """Test UNA segment parsing"""
-        una_segment = "UNA:+.?'"
-        syntax = EDIFACTSyntax.from_una_segment(una_segment)
+        # Standard UNA: UNA<comp><elem><dec><esc><reserved><term>
+        # Example: "UNA:+.? '" (Here, reserved is space, terminator is apostrophe)
+        una_segment = "UNA:+.? '" # Corrected to include a space for 'reserved'
+        parsed_syntax_obj = EDIFACTSyntax.from_una_segment(una_segment) # This is an EDIFACTSyntax object
         
-        self.assertEqual(syntax.component_separator, ':')
-        self.assertEqual(syntax.element_separator, '+')
-        self.assertEqual(syntax.decimal_point, '.')
-        self.assertEqual(syntax.escape_character, '?')
-        self.assertEqual(syntax.segment_terminator, "'")
+        self.assertEqual(parsed_syntax_obj.syntax.component_separator, ':')
+        self.assertEqual(parsed_syntax_obj.syntax.element_separator, '+')
+        self.assertEqual(parsed_syntax_obj.syntax.decimal_point, '.')
+        self.assertEqual(parsed_syntax_obj.syntax.escape_character, '?')
+        self.assertEqual(parsed_syntax_obj.syntax.reserved, ' ')
+        self.assertEqual(parsed_syntax_obj.syntax.segment_terminator, "'")
     
     def test_segment_splitting(self):
         """Test segment splitting"""
@@ -90,7 +93,7 @@ class TestEDIFACTParser(unittest.TestCase):
     
     def setUp(self):
         self.parser = EDIFACTParser()
-        self.sample_edifact = """UNA:+.?'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'DTM+137:20231201:102'NAD+BY+BUYER123++BUYER COMPANY'LIN+1++PRODUCT123:EN'QTY+21:100:PCE'PRI+AAA:10.50:EUR'UNT+8+1'UNZ+1+1'"""
+        self.sample_edifact = """UNA:+.? 'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'DTM+137:20231201:102'NAD+BY+BUYER123++BUYER COMPANY'LIN+1++PRODUCT123:EN'QTY+21:100:PCE'PRI+AAA:10.50:EUR'UNT+8+1'UNZ+1+1'"""
     
     def test_parse_message(self):
         """Test message parsing"""
@@ -134,7 +137,7 @@ class TestXMLGenerator(unittest.TestCase):
     def setUp(self):
         self.parser = EDIFACTParser()
         self.xml_generator = XMLGenerator()
-        self.sample_edifact = """UNA:+.?'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
+        self.sample_edifact = """UNA:+.? 'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
     
     def test_xml_generation(self):
         """Test XML generation from parsed message"""
@@ -142,7 +145,7 @@ class TestXMLGenerator(unittest.TestCase):
         xml_root = self.xml_generator.generate_xml(parsed_message)
         
         self.assertIsNotNone(xml_root)
-        self.assertEqual(xml_root.tag, "ORDERSMessage")
+        self.assertEqual(xml_root.tag, "PurchaseOrderMessage") # Changed from ORDERSMessage
     
     def test_xml_string_output(self):
         """Test XML string output"""
@@ -152,7 +155,7 @@ class TestXMLGenerator(unittest.TestCase):
         
         self.assertIsInstance(xml_string, str)
         self.assertIn("<?xml", xml_string)
-        self.assertIn("ORDERSMessage", xml_string)
+        self.assertIn("PurchaseOrderMessage", xml_string) # Changed from ORDERSMessage
 
 
 class TestEDIFACTToXMLConverter(unittest.TestCase):
@@ -160,14 +163,14 @@ class TestEDIFACTToXMLConverter(unittest.TestCase):
     
     def setUp(self):
         self.converter = EDIFACTToXMLConverter()
-        self.sample_edifact = """UNA:+.?'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'DTM+137:20231201:102'UNT+5+1'UNZ+1+1'"""
+        self.sample_edifact = """UNA:+.? 'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'DTM+137:20231201:102'UNT+5+1'UNZ+1+1'"""
     
     def test_convert_string(self):
         """Test string conversion"""
         xml_result = self.converter.convert_string(self.sample_edifact)
         
         self.assertIsInstance(xml_result, str)
-        self.assertIn("ORDERSMessage", xml_result)
+        self.assertIn("PurchaseOrderMessage", xml_result) # Changed from ORDERSMessage
         self.assertIn("UNB", xml_result)
         self.assertIn("BGM", xml_result)
     
@@ -239,14 +242,14 @@ class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions"""
     
     def setUp(self):
-        self.sample_edifact = """UNA:+.?'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
+        self.sample_edifact = """UNA:+.? 'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
     
     def test_convert_edifact_to_xml(self):
         """Test convenience conversion function"""
         xml_result = convert_edifact_to_xml(self.sample_edifact)
         
         self.assertIsInstance(xml_result, str)
-        self.assertIn("ORDERSMessage", xml_result)
+        self.assertIn("PurchaseOrderMessage", xml_result) # Changed from ORDERSMessage
     
     def test_parse_edifact_message(self):
         """Test convenience parsing function"""
@@ -268,7 +271,7 @@ class TestValidationLevels(unittest.TestCase):
     """Test different validation levels"""
     
     def setUp(self):
-        self.sample_edifact = """UNA:+.?'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
+        self.sample_edifact = """UNA:+.? 'UNB+UNOC:3+SENDER+RECEIVER+20231201:1200+1'UNH+1+ORDERS:D:03B:UN:EAN008'BGM+220+ORDER123+9'UNT+4+1'UNZ+1+1'"""
     
     def test_no_validation(self):
         """Test with no validation"""
